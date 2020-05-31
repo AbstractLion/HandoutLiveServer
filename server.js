@@ -73,13 +73,14 @@ io.on("connection", socket => {
         .get("roomCode")
         .value();
       // only send teacher lines to the teacher canvas
-      return socket.to(roomCode).emit("addStudentLines", userId, lines);
+      return socket.to(roomCode).emit("addTeacherLines", userId, lines);
     }
     const deviceId = db
       .get("users")
       .find({ id: userId })
       .get("deviceId")
       .value();
+    socket.to(teacherId).emit("addStudentLines", userId, lines);
     socket.to(userId).emit("addStudentLines", userId, lines);
     socket.to(deviceId).emit("addStudentLines", userId, lines);
   });
@@ -98,13 +99,14 @@ io.on("connection", socket => {
     socket.to(roomCode).emit("sendMessage", message);
   });
 
-  socket.on("changedCanvas", ({ lines, studentPos }) => {
+  socket.on("changedCanvas", ({ image, lines, studentPos }) => {
     const deviceId = db
       .get("users")
       .find({ id: socket.id })
       .get("deviceId")
       .value();
-    socket.to(deviceId).emit("changedCanvas", { lines, studentPos });
+    console.log(deviceId);
+    socket.to(deviceId).emit("changedCanvas", { image, lines, studentPos });
   });
 
   socket.on("createRoom", ({ userName, roomCode }, ack) => {
@@ -198,7 +200,32 @@ io.on("connection", socket => {
     socket.join(user.get("id").value());
 
     const room = db.get("rooms").find({ code: roomCode });
-    const isTeacher = room.get("teacherId").value() === user.get("id").value();
-    return ack({ success: true, isTeacher, userId });
+    const teacherId = room.get("teacherId").value()
+    const isTeacher = teacherId === user.get("id").value();
+
+    const teacher = db.get("users").find({ id: teacherId }).value();
+    const students = [];
+
+    students.push({
+      id: teacher.id,
+      name: teacher.name
+    });
+
+    const studentIds = room.get('studentIds').value();
+    studentIds.forEach((studentId) => {
+      console.log(studentId);
+      const student = db.get('users').find({ id: studentId }).value();
+      students.push({
+        id: student.id,
+        name: student.name
+      });
+    });
+
+    return ack({
+      success: true,
+      isTeacher,
+      userId,
+      students
+    });
   });
 });
