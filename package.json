@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "Leon Si <leonzalion@gmail.com>",
   "license": "MIT",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "express": "^4.17.1",
     "lowdb": "^1.0.0",
