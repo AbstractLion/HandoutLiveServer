@@ -99,14 +99,14 @@ io.on("connection", socket => {
     socket.to(roomCode).emit("sendMessage", message);
   });
 
-  socket.on("changedCanvas", ({ lines, studentPos }) => {
+  socket.on("changedCanvas", ({ image, lines, studentPos }) => {
     const deviceId = db
       .get("users")
       .find({ id: socket.id })
       .get("deviceId")
       .value();
     console.log(deviceId);
-    socket.to(deviceId).emit("changedCanvas", { lines, studentPos });
+    socket.to(deviceId).emit("changedCanvas", { image, lines, studentPos });
   });
 
   socket.on("createRoom", ({ userName, roomCode }, ack) => {
