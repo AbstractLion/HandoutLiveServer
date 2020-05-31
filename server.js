@@ -80,6 +80,7 @@ io.on("connection", socket => {
       .find({ id: userId })
       .get("deviceId")
       .value();
+    socket.to(teacherId).emit("addStudentLines", userId, lines);
     socket.to(userId).emit("addStudentLines", userId, lines);
     socket.to(deviceId).emit("addStudentLines", userId, lines);
   });
@@ -104,6 +105,7 @@ io.on("connection", socket => {
       .find({ id: socket.id })
       .get("deviceId")
       .value();
+    console.log(deviceId);
     socket.to(deviceId).emit("changedCanvas", { lines, studentPos });
   });
 
@@ -198,7 +200,32 @@ io.on("connection", socket => {
     socket.join(user.get("id").value());
 
     const room = db.get("rooms").find({ code: roomCode });
-    const isTeacher = room.get("teacherId").value() === user.get("id").value();
-    return ack({ success: true, isTeacher, userId });
+    const teacherId = room.get("teacherId").value()
+    const isTeacher = teacherId === user.get("id").value();
+
+    const teacher = db.get("users").find({ id: teacherId }).value();
+    const students = [];
+
+    students.push({
+      id: teacher.id,
+      name: teacher.name
+    });
+
+    const studentIds = room.get('studentIds').value();
+    studentIds.forEach((studentId) => {
+      console.log(studentId);
+      const student = db.get('users').find({ id: studentId }).value();
+      students.push({
+        id: student.id,
+        name: student.name
+      });
+    });
+
+    return ack({
+      success: true,
+      isTeacher,
+      userId,
+      students
+    });
   });
 });
